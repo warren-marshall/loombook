@@ -1,0 +1,37 @@
+.page {
+  padding: 20px;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Grid children may shrink below their content width, so the Gantt's
+   wide timeline scrolls inside its card instead of widening the page. */
+.homeGrid > * {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .homeGrid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "dailygreeting"
+      "calendar"
+      "gantt";
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 12px;
+  }
+
+  .homeGrid {
+    gap: 12px;
+  }
+
+  .gantt {
+    padding: 8px;
+  }
+}
