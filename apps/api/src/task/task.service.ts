@@ -6,14 +6,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Task, TaskStatus } from './entities/task.entity';
-import { Project } from '../projects/entities/project.entity';
+import { Project } from '../project/entities/project.entity';
 import { User } from '../user/entities/user.entity';
 import { Contact } from '../contact/entities/contact.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
-export class TasksService {
+export class TaskService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,

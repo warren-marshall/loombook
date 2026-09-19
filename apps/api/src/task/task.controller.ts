@@ -10,7 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { TasksService } from './tasks.service';
+import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -20,7 +20,7 @@ interface RequestWithUser extends Request {
 
 @Controller('task')
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(private readonly tasksService: TaskService) {}
 
   @Post()
   create(@Body() createTaskDto: CreateTaskDto, @Req() req: RequestWithUser) {

@@ -11,7 +11,7 @@ import {
 import { User } from '../../user/entities/user.entity';
 import { Contact } from '../../contact/entities/contact.entity';
 import { EmailMessage } from '../../email-messages/entities/email-message.entity';
-import { Project } from '../../projects/entities/project.entity';
+import { Project } from '../../project/entities/project.entity';
 
 export enum LeadStatus {
   NEW = 'new',

@@ -5,6 +5,55 @@
   height: 100%;
   overflow-y: auto;
   background-color: var(--canvas);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(2, auto) 1fr;
+  grid-template-areas:
+    "brief brief brief shoot shoot shoot"
+    "dailylight dailylight dailylight dailylight dailylight dailylight"
+    "kanban kanban kanban kanban kanban kanban"
+}
+
+.brief {
+  grid-area: brief;
+  background-color: var(--paper);
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
+  font-weight: 300;
+  border: var(--border-small) solid var(--stone);
+}
+
+.nextshoot {
+  grid-area: shoot;
+  padding: var(--padding-share);
+  background-color: var(--paper);
+  border-radius: var(--radius-share);
+}
+
+.dailylight {
+  background-color: var(--paper);
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
+}
+
+.kanban {
+  background-color: var(--paper);
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
+  grid-column: span 6;
+}
+
+.heading {
+  font-family: var(--font-headers), sans-serif;
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
+}
+
+.dailylight {
+  grid-area: dailylight;
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
 }
 
 /* Grid children may shrink below their content width, so the Gantt's

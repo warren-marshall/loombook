@@ -5,10 +5,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { LeadModule } from './lead/lead.module';
+import { ClientModule } from './client/client.module';
+import { ContactModule } from './contact/contact.module';
+import { ProjectModule } from './project/project.module';
+import { TaskModule } from './task/task.module';
 
-// ClientModule and LeadModule are not wired in yet — they depend on
-// email-messages, invoice, contract, attachment, and gmail modules that
-// don't exist in this codebase yet. Re-add once those are built out.
 
 @Module({
   imports: [
@@ -28,6 +30,11 @@ import { AuthModule } from './auth/auth.module';
     }),
     UserModule,
     AuthModule,
+    LeadModule,
+    ClientModule,
+    ContactModule,
+    ProjectModule,
+    TaskModule,
   ],
   controllers: [AppController],
   providers: [AppService],

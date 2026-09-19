@@ -12,6 +12,11 @@
   --font-headers: var(--font-switzer);
   --font-body: var(--font-switzer);
   --font-mono: var(--font-geist-mono);
+
+  /* Padding, border, radius*/
+  --padding-share: 15px;
+  --radius-share: 5px;
+  --border-small: 1px;
 }
 
 html {
@@ -59,6 +64,7 @@ iframe {
   margin: 0 auto;
   padding: 0 32px;
 }
+
 
 @media (max-width: 640px) {
   .wrap {

@@ -11,8 +11,8 @@ import {
 import { Contact } from '../../contact/entities/contact.entity';
 import { User } from '../../user/entities/user.entity';
 import { EmailMessage } from '../../email-messages/entities/email-message.entity';
-import { Project } from '../../projects/entities/project.entity';
-import { Invoice } from 'src/invoice/entities/invoice.entity';
+import { Project } from '../../project/entities/project.entity';
+import { Invoice } from '../../invoice/entities/invoice.entity';
 
 export enum ClientStatus {
   ACTIVE = 'active',

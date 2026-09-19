@@ -13,7 +13,7 @@ import {
 import { Client } from '../../client/entities/client.entity';
 import { Lead } from '../../lead/entities/lead.entity';
 import { User } from '../../user/entities/user.entity';
-import { Task } from '../../tasks/entities/task.entity';
+import { Task } from '../../task/entities/task.entity';
 
 export enum ProjectStatus {
   FUTURE = 'future',

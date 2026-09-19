@@ -46,3 +46,5 @@ async function seed() {
 }
 
 void seed();
+
+// To run this in terminal: npm run seed:owner -- <email> <password> <firstname> <lastname>

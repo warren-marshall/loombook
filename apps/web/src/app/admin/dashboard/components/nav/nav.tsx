@@ -19,34 +19,30 @@ export default function AdminNav() {
   return (
     <nav className={styles.nav}>
       <div className={styles.nameplate}>
-        <Link href="/admin/dashboard">Home</Link>
+        <Link href="/admin/dashboard">LoomBook</Link>
       </div>
       <ul className={styles.navLinks}>
-        <li>
-          <Link href="/admin/dashboard/clients">
-            {" "}
-            <BookUser /> Clients
-          </Link>
-        </li>
-        <li>
-          <Link href="/admin/dashboard/projects">
-            {" "}
-            <Folder /> Projects
-          </Link>
-        </li>
-        <li>
-          <Link href="/admin/dashboard/tasks">
-            {" "}
-            <ListCheck /> Tasks
-          </Link>
-        </li>
-        <li>
-          <Link href="/admin/dashboard/reports">
-            {" "}
-            <ChartLine /> Reports
-          </Link>
-        </li>
-      </ul>
+  <li>
+    <Link href="/admin/dashboard/client">
+      &bull; Clients
+    </Link>
+  </li>
+  <li>
+    <Link href="/admin/dashboard/project">
+      &bull; Projects
+    </Link>
+  </li>
+  <li>
+    <Link href="/admin/dashboard/task">
+      &bull; Tasks
+    </Link>
+  </li>
+  <li>
+    <Link href="/admin/dashboard/report">
+      &bull; Reports
+    </Link>
+  </li>
+</ul>
       <button onClick={handleLogout} className={styles.logoutButton}>
         Log out
       </button>

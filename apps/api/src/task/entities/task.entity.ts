@@ -11,7 +11,7 @@ import {
   Index,
 } from 'typeorm';
 
-import { Project } from '../../projects/entities/project.entity';
+import { Project } from '../../project/entities/project.entity';
 import { User } from '../../user/entities/user.entity';
 import { Contact } from '../../contact/entities/contact.entity';
 

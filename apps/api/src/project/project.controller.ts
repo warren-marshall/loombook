@@ -10,7 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { ProjectsService } from './projects.service';
+import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
@@ -20,7 +20,7 @@ interface RequestWithUser extends Request {
 
 @Controller('project')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectService) {}
 
   @Post()
   create(
