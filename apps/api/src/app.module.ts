@@ -10,6 +10,7 @@ import { ClientModule } from './client/client.module';
 import { ContactModule } from './contact/contact.module';
 import { ProjectModule } from './project/project.module';
 import { TaskModule } from './task/task.module';
+import { LocationModule } from './location/location.module';
 
 
 @Module({
@@ -35,6 +36,7 @@ import { TaskModule } from './task/task.module';
     ContactModule,
     ProjectModule,
     TaskModule,
+    LocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
