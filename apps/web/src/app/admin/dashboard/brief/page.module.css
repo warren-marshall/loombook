@@ -4,7 +4,7 @@
   box-sizing: border-box;
   height: 100%;
   overflow-y: auto;
-  background-color: var(--canvas);
+  background-color: var(--page-background);
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(6, 1fr);
@@ -12,12 +12,12 @@
   grid-template-areas:
     "brief brief brief shoot shoot shoot"
     "dailylight dailylight dailylight dailylight dailylight dailylight"
-    "kanban kanban kanban kanban kanban kanban"
+    "schedule schedule editingsnaps editingsnaps taskmetrics taskmetrics";
 }
 
 .brief {
   grid-area: brief;
-  background-color: var(--paper);
+  background-color: var(--card);
   padding: var(--padding-share);
   border-radius: var(--radius-share);
   font-weight: 300;
@@ -27,21 +27,36 @@
 .nextshoot {
   grid-area: shoot;
   padding: var(--padding-share);
-  background-color: var(--paper);
+  background-color: var(--card);
   border-radius: var(--radius-share);
 }
 
 .dailylight {
-  background-color: var(--paper);
+  background-color: var(--card);
   padding: var(--padding-share);
   border-radius: var(--radius-share);
+  grid-area: dailylight;
 }
 
-.kanban {
-  background-color: var(--paper);
+.schedule {
+  background-color: var(--card);
   padding: var(--padding-share);
   border-radius: var(--radius-share);
-  grid-column: span 6;
+  grid-area: schedule;
+}
+
+.editingsnaps {
+  background-color: var(--card);
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
+  grid-area: editingsnaps;
+}
+
+.taskmetrics {
+  background-color: var(--card);
+  padding: var(--padding-share);
+  border-radius: var(--radius-share);
+  grid-area: taskmetrics;
 }
 
 .heading {

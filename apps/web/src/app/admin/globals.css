@@ -1,11 +1,9 @@
 :root {
   /* Color tokens */
-  --canvas: #f7f2e9;
-  --paper: #fffdf8;
-  --ink: #262019;
-  --stone: #948a7a;
-  --brass: #9c7a45;
-  --bordeaux: #5b2a2e;
+  --page-background: #faf8f5;
+  --panel: #f2eee7;
+  --canvas-background: #eae5dc;
+  --card: #fff;
 
   /* Font tokens — reference the CSS variables next/font attached to <html> */
   --font-display: var(--font-general-sans);
@@ -64,7 +62,6 @@ iframe {
   margin: 0 auto;
   padding: 0 32px;
 }
-
 
 @media (max-width: 640px) {
   .wrap {

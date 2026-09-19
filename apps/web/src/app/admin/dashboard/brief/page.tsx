@@ -7,8 +7,10 @@ export default function AdminHome() {
         <div className={styles.heading}>Daily brief</div>
       </div>
       <div className={styles.dailylight}>Today&apos;s light</div>
-      <div className={styles.kanban}>Kanban</div>
+      <div className={styles.schedule}>Schedule</div>
       <div className={styles.nextshoot}>Next shoot</div>
+      <div className={styles.editingsnaps}>Editing Snapshots</div>
+      <div className={styles.taskmetrics}>Task metrics</div>
     </div>
   );
 }

@@ -6,7 +6,7 @@
   flex-shrink: 0;
   padding: 24px 16px;
   border-right: 1px solid var(--stone);
-  background: var(--paper);
+  background: var(--panel);
 }
 
 .nameplate {
