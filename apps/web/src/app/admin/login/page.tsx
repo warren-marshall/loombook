@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
   return (
     <main className={styles.page}>
       <form className={styles.form} onSubmit={handleSubmit}>
-        <h1 className={styles.heading}>Admin</h1>
+        <h1 className={styles.heading}>Welcome</h1>
         <div className={styles.field}>
           <label htmlFor="email" className={styles.label}>
             Email

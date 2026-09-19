@@ -1,17 +1,11 @@
 :root {
   /* Color tokens */
-  --ink: #121826;
-  --ink-soft: #1c2432;
-  --paper: #eef1f4;
-  --paper-alt: #e3e8ed;
-  --slate: #4b5a6b;
-  --slate-light: #7c8a9a;
-  --wireline: #8ca3b8;
-  --signal: #c97a2b;
-  --signal-soft: #e3a768;
-  --booked: #2f6f5e;
-  --line: rgba(18, 24, 38, 0.12);
-  --line-dark: rgba(238, 241, 244, 0.16);
+  --canvas: #f7f2e9;
+  --paper: #fffdf8;
+  --ink: #262019;
+  --stone: #948a7a;
+  --brass: #9c7a45;
+  --bordeaux: #5b2a2e;
 
   /* Font tokens — reference the CSS variables next/font attached to <html> */
   --font-display: var(--font-general-sans);
