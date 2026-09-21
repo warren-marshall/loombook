@@ -1,6 +1,8 @@
 services:
   db:
-    image: postgres:17-alpine
+    # PostGIS build of Postgres 17 - the Location entity stores coordinates as
+    # geography(Point, 4326), which stock postgres:17-alpine cannot create.
+    image: postgis/postgis:17-3.5-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
