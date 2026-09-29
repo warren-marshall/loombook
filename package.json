@@ -8,12 +8,16 @@
   ],
   "scripts": {
     "dev": "concurrently -n API,WEB -c blue,magenta \"npm run start:dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
     "dev:api": "npm run start:dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/api && npm run build --workspace=apps/web",
     "test": "npm run test --workspace=apps/api"
   },
   "devDependencies": {
-    "concurrently": "^10.0.3"
+    "concurrently": "^10.0.3",
+    "supabase": "^2.118.0"
   }
 }

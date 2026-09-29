@@ -11,6 +11,7 @@ import { ContactModule } from './contact/contact.module';
 import { ProjectModule } from './project/project.module';
 import { TaskModule } from './task/task.module';
 import { LocationModule } from './location/location.module';
+import { SupabaseModule } from './supabase/supabase.module';
 
 
 @Module({
@@ -21,14 +22,15 @@ import { LocationModule } from './location/location.module';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 5432),
+        port: config.get<number>('DB_PORT', 54322),
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
-        database: config.get<string>('DB_NAME', 'loombook'),
+        database: config.get<string>('DB_NAME', 'postgres'),
         autoLoadEntities: true,
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
+        synchronize: false,
       }),
     }),
+    SupabaseModule,
     UserModule,
     AuthModule,
     LeadModule,

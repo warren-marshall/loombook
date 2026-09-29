@@ -1,30 +1,44 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SupabaseService } from '../supabase/supabase.service';
 
-const SALT_ROUNDS = 10;
-
+/**
+ * Accounts live in Supabase Auth; the `user` table is the app profile, kept in
+ * sync by database triggers. Writes go through the auth admin API and reads
+ * come from the profile table.
+ */
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly supabase: SupabaseService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.userRepository.create({
-      firstName: createUserDto.firstname,
-      lastName: createUserDto.lastname,
+    const { data, error } = await this.supabase.admin.auth.admin.createUser({
       email: createUserDto.email,
-      password: await bcrypt.hash(createUserDto.password, SALT_ROUNDS),
-      ...(createUserDto.role !== undefined && { userRole: createUserDto.role }),
+      password: createUserDto.password,
+      email_confirm: true,
+      user_metadata: {
+        firstName: createUserDto.firstname,
+        lastName: createUserDto.lastname,
+      },
+      app_metadata: { role: createUserDto.role ?? UserRole.ADMIN },
     });
+    if (error || !data.user) {
+      throw new BadRequestException(error?.message ?? 'Could not create user');
+    }
 
-    return this.userRepository.save(user);
+    return this.findOne(data.user.id);
   }
 
   findAll(): Promise<User[]> {
@@ -40,39 +54,38 @@ export class UserService {
   }
 
   findByEmail(email: string): Promise<User | null> {
-    return this.userRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.email = :email', { email })
-      .getOne();
-  }
-
-  verifyPassword(plain: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(plain, hash);
+    return this.userRepository.findOneBy({ email });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    await this.findOne(id);
+    const current = await this.findOne(id);
 
-    await this.userRepository.update(id, {
-      ...(updateUserDto.firstname !== undefined && {
-        firstName: updateUserDto.firstname,
-      }),
-      ...(updateUserDto.lastname !== undefined && {
-        lastName: updateUserDto.lastname,
-      }),
+    const { error } = await this.supabase.admin.auth.admin.updateUserById(id, {
       ...(updateUserDto.email !== undefined && { email: updateUserDto.email }),
-      ...(updateUserDto.role !== undefined && { userRole: updateUserDto.role }),
       ...(updateUserDto.password !== undefined && {
-        password: await bcrypt.hash(updateUserDto.password, SALT_ROUNDS),
+        password: updateUserDto.password,
+      }),
+      user_metadata: {
+        firstName: updateUserDto.firstname ?? current.firstName,
+        lastName: updateUserDto.lastname ?? current.lastName,
+      },
+      ...(updateUserDto.role !== undefined && {
+        app_metadata: { role: updateUserDto.role },
       }),
     });
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
 
     return this.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
-    const user = await this.findOne(id);
-    await this.userRepository.remove(user);
+    await this.findOne(id);
+
+    const { error } = await this.supabase.admin.auth.admin.deleteUser(id);
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

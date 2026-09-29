@@ -1,122 +1,15 @@
 -- Dev-environment fake data for LoomBook.
 --
--- Creates the clients / contact / lead / projects / tasks tables and fills
--- them, plus a few extra users, so the app has something to render against.
---
--- These tables are created here rather than by TypeORM because only
--- UserModule and AuthModule are wired into AppModule right now, so
--- autoLoadEntities never sees the rest of the entity graph (see the comment
--- in src/app.module.ts). The DDL below mirrors the entity decorators and
--- TypeORM's naming strategy, so once those modules are re-added,
--- synchronize should find the schema already matching.
+-- Fills users (as Supabase Auth accounts), clients, contacts, leads, projects
+-- and tasks so the app has something to render against. The tables come from
+-- supabase/migrations.
 --
 -- Re-runnable: every seeded row uses a fixed UUID and is deleted first, so
 -- running this twice leaves the same result and never touches real rows.
 --
--- Usage:  npm run seed:dev
+-- Usage:  npm run seed:dev   (needs `npx supabase start` running)
 
 BEGIN;
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ---------------------------------------------------------------- schema
-
-DO $$ BEGIN
-  CREATE TYPE clients_status_enum AS ENUM ('active', 'past', 'churned');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-DO $$ BEGIN
-  CREATE TYPE lead_status_enum AS ENUM
-    ('new', 'contacted', 'contract_sent', 'booked', 'lost', 'archived');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
-CREATE TABLE IF NOT EXISTS "clients" (
-  "id"                  uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  "companyName"         character varying NOT NULL,
-  "industry"            character varying,
-  "website"             character varying,
-  "status"              clients_status_enum NOT NULL DEFAULT 'active',
-  "convertedFromLeadId" character varying,
-  "stripeCustomerId"    character varying UNIQUE,
-  "updatedByUserId"     uuid REFERENCES "user" ("id") ON DELETE SET NULL,
-  "createdAt"           timestamptz NOT NULL DEFAULT now(),
-  "updatedAt"           timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS "lead" (
-  "id"                   uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  "businessName"         character varying NOT NULL,
-  "website"              character varying,
-  "status"               lead_status_enum NOT NULL DEFAULT 'new',
-  "updatedByUserId"      uuid REFERENCES "user" ("id") ON DELETE SET NULL,
-  "convertedToClientId"  character varying,
-  "createdAt"            timestamptz NOT NULL DEFAULT now(),
-  "updatedAt"            timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS "contact" (
-  "id"        uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  "name"      character varying NOT NULL,
-  "email"     character varying NOT NULL,
-  "phone"     character varying,
-  "role"      character varying,
-  "isPrimary" boolean NOT NULL DEFAULT false,
-  "clientId"  uuid REFERENCES "clients" ("id") ON DELETE CASCADE,
-  "leadId"    uuid REFERENCES "lead" ("id") ON DELETE CASCADE,
-  "createdAt" timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS "projects" (
-  "id"               uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  "name"             character varying NOT NULL,
-  "description"      text,
-  "status"           character varying NOT NULL DEFAULT 'future',
-  "startDate"        date,
-  "dueDate"          date,
-  "expectedDuration" integer,
-  "completedDate"    timestamptz,
-  "createdById"      uuid NOT NULL REFERENCES "user" ("id"),
-  "clientId"         uuid REFERENCES "clients" ("id") ON DELETE SET NULL,
-  "leadId"           uuid REFERENCES "lead" ("id") ON DELETE SET NULL,
-  "lastModifiedById" uuid REFERENCES "user" ("id"),
-  "createdAt"        timestamptz NOT NULL DEFAULT now(),
-  "updatedAt"        timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS "IDX_projects_clientId" ON "projects" ("clientId");
-CREATE INDEX IF NOT EXISTS "IDX_projects_leadId"   ON "projects" ("leadId");
-
-CREATE TABLE IF NOT EXISTS "tasks" (
-  "id"                  uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  "name"                character varying NOT NULL,
-  "description"         text,
-  "status"              character varying NOT NULL DEFAULT 'future',
-  "projectId"           uuid NOT NULL REFERENCES "projects" ("id") ON DELETE CASCADE,
-  "startDate"           date,
-  "dueDate"             date,
-  "expectedDuration"    integer,
-  "assigneeName"        character varying,
-  "assigneeUserId"      uuid REFERENCES "user" ("id") ON DELETE SET NULL,
-  "assigneeContactId"   uuid REFERENCES "contact" ("id") ON DELETE SET NULL,
-  "isRecurring"         boolean NOT NULL DEFAULT false,
-  "recurrencePattern"   character varying,
-  "recurrenceInterval"  integer,
-  "recurrenceDayOfWeek" integer,
-  "recurrenceEndDate"   date,
-  "recurrenceCount"     integer,
-  "recurringGroupId"    uuid,
-  "createdById"         uuid NOT NULL REFERENCES "user" ("id"),
-  "lastModifiedById"    uuid REFERENCES "user" ("id"),
-  "createdAt"           timestamptz NOT NULL DEFAULT now(),
-  "updatedAt"           timestamptz NOT NULL DEFAULT now(),
-  "completedAt"         timestamptz
-);
-CREATE INDEX IF NOT EXISTS "IDX_tasks_projectId" ON "tasks" ("projectId");
-
-CREATE TABLE IF NOT EXISTS "task_dependencies" (
-  "taskId"          uuid NOT NULL REFERENCES "tasks" ("id") ON DELETE CASCADE,
-  "dependsOnTaskId" uuid NOT NULL REFERENCES "tasks" ("id") ON DELETE CASCADE,
-  PRIMARY KEY ("taskId", "dependsOnTaskId")
-);
 
 -- ------------------------------------------------------------- clean up
 -- Seeded rows only. Fixed UUID blocks per table: users 1111..., clients 2222...,
@@ -129,15 +22,44 @@ DELETE FROM "projects" WHERE "id"::text LIKE '55555555-%';
 DELETE FROM "contact"  WHERE "id"::text LIKE '33333333-%';
 DELETE FROM "lead"     WHERE "id"::text LIKE '44444444-%';
 DELETE FROM "clients"  WHERE "id"::text LIKE '22222222-%';
-DELETE FROM "user"     WHERE "id"::text LIKE '11111111-%';
+-- Deleting the auth account removes the matching "user" profile row (trigger).
+DELETE FROM auth.users WHERE "id"::text LIKE '11111111-%';
 
 -- ---------------------------------------------------------------- users
--- Password for all seeded users: Password123!
+-- Seeded users are Supabase Auth accounts (the profile rows in "user" are
+-- created by a trigger). Password for all of them: Password123!
 
-INSERT INTO "user" ("id", "firstName", "lastName", "email", "password", "userRole", "userType") VALUES
-  ('11111111-0000-4000-8000-000000000001', 'Nadia', 'Okonkwo',   'nadia@loombook.dev', '$2b$10$spZ5cMTHHAc2oUDMNt.xLu4LhIhdIRMJFESRwJONEHGRw9m9.EfNa', 'admin', 'photographer'),
-  ('11111111-0000-4000-8000-000000000002', 'Elias', 'Ferrante',  'elias@loombook.dev', '$2b$10$spZ5cMTHHAc2oUDMNt.xLu4LhIhdIRMJFESRwJONEHGRw9m9.EfNa', 'basic', 'photographer'),
-  ('11111111-0000-4000-8000-000000000003', 'Priya', 'Raghunath', 'priya@loombook.dev', '$2b$10$spZ5cMTHHAc2oUDMNt.xLu4LhIhdIRMJFESRwJONEHGRw9m9.EfNa', 'basic', 'photographer');
+INSERT INTO auth.users (
+  "instance_id", "id", "aud", "role", "email", "encrypted_password",
+  "email_confirmed_at", "raw_app_meta_data", "raw_user_meta_data",
+  "created_at", "updated_at",
+  "confirmation_token", "recovery_token", "email_change",
+  "email_change_token_new", "email_change_token_current",
+  "phone_change", "phone_change_token", "reauthentication_token"
+)
+SELECT
+  '00000000-0000-0000-0000-000000000000', u.id, 'authenticated', 'authenticated',
+  u.email, extensions.crypt('Password123!', extensions.gen_salt('bf')),
+  now(),
+  jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email'), 'role', u.role),
+  jsonb_build_object('firstName', u.first_name, 'lastName', u.last_name, 'email_verified', true),
+  now(), now(), '', '', '', '', '', '', '', ''
+FROM (VALUES
+  ('11111111-0000-4000-8000-000000000001'::uuid, 'Nadia', 'Okonkwo',   'nadia@loombook.dev', 'admin'),
+  ('11111111-0000-4000-8000-000000000002'::uuid, 'Elias', 'Ferrante',  'elias@loombook.dev', 'basic'),
+  ('11111111-0000-4000-8000-000000000003'::uuid, 'Priya', 'Raghunath', 'priya@loombook.dev', 'basic')
+) AS u(id, first_name, last_name, email, role);
+
+INSERT INTO auth.identities (
+  "id", "provider_id", "user_id", "identity_data", "provider",
+  "last_sign_in_at", "created_at", "updated_at"
+)
+SELECT
+  gen_random_uuid(), id::text, id,
+  jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true),
+  'email', now(), now(), now()
+FROM auth.users
+WHERE id::text LIKE '11111111-%';
 
 -- -------------------------------------------------------------- clients
 

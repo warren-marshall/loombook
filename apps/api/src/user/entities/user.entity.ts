@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
 } from 'typeorm';
@@ -16,7 +16,9 @@ export enum UserType {
 
 @Entity('user')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  // Same id as the account in Supabase Auth (auth.users). Rows are created and
+  // kept in sync by database triggers (supabase/migrations), not by the API.
+  @PrimaryColumn('uuid')
   id!: string;
 
   @Column()
@@ -24,9 +26,6 @@ export class User {
 
   @Column()
   lastName!: string;
-
-  @Column({ select: false })
-  password!: string;
 
   @Column({ unique: true })
   email!: string;

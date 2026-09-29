@@ -1,13 +1,14 @@
 import {
+  CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from './public.decorator';
 import { ApiKeyService } from '../api-key/api-key.service';
+import { SupabaseService } from '../supabase/supabase.service';
 
 export interface AuthenticatedUser {
   id: string;
@@ -21,18 +22,18 @@ export interface AuthenticatedUser {
 // JWT. RolesGuard checks this to bypass role checks for trusted services.
 export interface ServiceAuthenticatedRequest extends Request {
   isServiceRequest?: boolean;
+  user?: AuthenticatedUser;
 }
 
 const SERVICE_TOKEN_HEADER = 'x-service-token';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class JwtAuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private apiKeyService: ApiKeyService,
-  ) {
-    super();
-  }
+    private supabase: SupabaseService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -57,16 +58,34 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('Invalid service token');
     }
 
-    return super.canActivate(context) as Promise<boolean>;
-  }
-
-  handleRequest<TUser = AuthenticatedUser>(
-    err: Error | null,
-    user: TUser | false,
-  ): TUser {
-    if (err || !user) {
-      throw err || new UnauthorizedException('Invalid or missing access token');
+    const match = /^Bearer (.+)$/.exec(request.headers.authorization ?? '');
+    if (!match) {
+      throw new UnauthorizedException('Invalid or missing access token');
     }
-    return user;
+
+    // Verifies the Supabase-issued JWT (locally against the project's JWKS
+    // for asymmetric keys, via the Auth server otherwise) and checks expiry.
+    const { data, error } = await this.supabase.admin.auth.getClaims(match[1]);
+    if (error || !data) {
+      throw new UnauthorizedException('Invalid or missing access token');
+    }
+
+    const claims = data.claims as SupabaseClaims;
+    request.user = {
+      id: claims.sub,
+      email: claims.email ?? '',
+      // app_metadata is only writable server-side, so the role can be trusted.
+      role: claims.app_metadata?.role ?? 'basic',
+      firstname: claims.user_metadata?.firstName,
+      lastname: claims.user_metadata?.lastName,
+    };
+    return true;
   }
+}
+
+interface SupabaseClaims {
+  sub: string;
+  email?: string;
+  app_metadata?: { role?: string };
+  user_metadata?: { firstName?: string; lastName?: string };
 }

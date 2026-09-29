@@ -5,7 +5,7 @@ Step-by-step instructions to spin up the `api` and `web` apps on your machine. E
 ## Prerequisites
 
 - Node.js (check with `node --version`)
-- Docker Desktop running (for Postgres)
+- Docker Desktop running (for local Supabase)
 - npm (ships with Node)
 
 ## 1. Install dependencies
@@ -18,28 +18,33 @@ npm install
 
 This installs and links dependencies for the root, `apps/web`, `apps/api`, and the shared `packages/types` workspace in one shot.
 
-## 2. Start Postgres
+## 2. Start Supabase (local)
+
+Postgres and Auth both run from the Supabase CLI (installed as a dev dependency) in Docker:
 
 ```bash
-docker compose up -d db
-docker compose ps   # confirm it's "running"
+npm run db:start
 ```
 
-> **Port conflict:** if you have another local project also mapping Postgres to `5432`, `docker compose up -d db` will fail with `port is already allocated`. Stop the other container (`docker stop <name>`) or change the `ports:` mapping in [docker-compose.yml](docker-compose.yml), then update `DB_PORT` in `apps/api/.env` to match.
+The first run pulls images and applies `supabase/migrations`. It prints the local URLs and keys (Studio is at http://127.0.0.1:54323); re-print them any time with `npx supabase status -o env`. Other commands: `npm run db:stop`, and `npm run db:reset` to rebuild the database from the migrations.
+
+> **Port conflict:** the stack uses 54321 (API), 54322 (Postgres) and 54323 (Studio). Change them in `supabase/config.toml` if they clash, then update `apps/api/.env`.
 
 ## 3. Configure the API's environment
 
-The API reads DB credentials and JWT secrets from `apps/api/.env` (gitignored). Create it from the example:
+The API reads its config from `apps/api/.env` (gitignored). Create it from the example, then fill in `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` from `npx supabase status -o env` (`API_URL` -> `SUPABASE_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY`):
 
 ```bash
 cp apps/api/.env.example apps/api/.env
 ```
 
-The defaults match `docker-compose.yml`, so no edits are needed for local dev. `synchronize: true` is enabled in development, so TypeORM creates/updates tables automatically on boot — no manual migrations needed while iterating.
+The `DB_*` defaults already match local Supabase. The whole schema lives in `supabase/migrations` (TypeORM's `synchronize` is off). To change it, add a migration with `npx supabase migration new <name>`, write the SQL, update the matching entity, then `npm run db:reset` to check it applies from scratch.
+
+To point at a hosted Supabase project instead, use its project URL, keys and database connection details for the same variables.
 
 ## 4. Create the first user
 
-Every API route is protected by a global JWT auth guard, including `POST /user` — so there's no way to create the first account through the API itself. Run the seed script once per environment instead:
+Every API route is protected by a global JWT auth guard, including `POST /user` — so there's no way to create the first account through the API itself. Run the seed script once per environment instead. It creates a Supabase Auth account (public sign-up is disabled), and a trigger creates the matching `user` profile row:
 
 Run this from the **repo root**:
 
@@ -51,7 +56,7 @@ npm run seed:owner --workspace=apps/api -- admin@loombook.local changeme123 Admi
 
 The four arguments after `--` are `email password firstname lastname` — swap in your own values (no angle brackets; in PowerShell, `<` is a reserved operator).
 
-This boots a throwaway Nest app context and creates the account through the real `UserService` (so it's hashed/validated the same way a normal signup would be). Running it again with an email that already exists fails safely rather than creating a duplicate.
+This boots a throwaway Nest app context and creates the account through the real `UserService` (which calls the Supabase auth admin API). Running it again with an email that already exists fails safely rather than creating a duplicate.
 
 ## 5. Start both apps
 
@@ -82,7 +87,7 @@ Should return `{"accessToken": "..."}`. On Windows PowerShell, use `Invoke-RestM
 
 ```bash
 # Ctrl+C the dev process, then:
-docker compose down
+npm run db:stop
 ```
 
 ---
@@ -99,7 +104,7 @@ The API doesn't compile as one whole TypeScript project yet — several in-progr
 | `projects` | depends on `lead` |
 | `tasks` | depends on the above |
 
-`user` and `auth` are fully wired and working (TypeORM, JWT login/refresh/logout, bcrypt password hashing, role guard, seed script).
+`user` and `auth` are wired to Supabase Auth: the API's `/auth/login`, `/auth/refresh` and `/auth/logout` endpoints proxy to Supabase, the guard verifies Supabase JWTs, and the role comes from the account's `app_metadata.role`.
 
 `api-key`/service-token auth (the `x-service-token` header path in `JwtAuthGuard`) is a stub that always rejects — `apps/api/src/api-key/api-key.service.ts` has no real key store yet. Build that out before relying on service-to-service auth.
 
@@ -109,13 +114,15 @@ To bring a module back once its dependencies exist: remove it from the `exclude`
 
 | Task | Command |
 | --- | --- |
-| Start Postgres only | `docker compose up -d db` |
+| Start Supabase | `npm run db:start` |
+| Rebuild the DB from migrations | `npm run db:reset` |
+| Load dev fake data (users: `Password123!`) | `npm run seed:dev --workspace=apps/api` |
 | Start both apps | `npm run dev` |
 | Start API only | `npm run dev:api` |
 | Start web only | `npm run dev:web` |
 | Seed the first admin user | `npm run seed:owner --workspace=apps/api -- email password firstname lastname` |
-| Stop Docker containers | `docker compose down` |
-| Open a database shell | `docker exec -it loombook-db-1 psql -U postgres -d loombook -P pager=off` |
+| Stop Supabase | `npm run db:stop` |
+| Open a database shell | `docker exec -it supabase_db_loombook psql -U postgres -d postgres -P pager=off` |
 
 ### Testing API endpoints (PowerShell)
 
