@@ -1,0 +1,24 @@
+.page {
+    background: var(--page-background);
+    padding: var(--padding-share);
+}
+
+.title {
+    padding: var(--padding-share);
+}
+
+.clientList {
+    padding: var(--padding-share);
+    background-color: var(--card);
+}
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.table th,
+.table td {
+    padding: var(--padding-share);
+    border-bottom: var(--border-small) solid var(--canvas-background);
+}
