@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
 export default function AdminLoginPage() {
@@ -16,27 +17,20 @@ export default function AdminLoginPage() {
     setError("");
     setStatus("submitting");
 
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        },
-      );
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (!res.ok) {
-        throw new Error("Invalid email or password");
-      }
-
-      router.push("/admin/dashboard");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+    if (error) {
+      setError("Invalid email or password");
       setStatus("idle");
+      return;
     }
+
+    router.push("/admin/dashboard");
+    router.refresh();
   }
 
   return (

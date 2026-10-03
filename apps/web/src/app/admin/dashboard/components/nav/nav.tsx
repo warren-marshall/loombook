@@ -3,15 +3,13 @@
 import { useRouter } from "next/navigation";
 import styles from "./nav.module.css";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminNav() {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
+    await createClient().auth.signOut();
     router.push("/admin/login");
   }
 
